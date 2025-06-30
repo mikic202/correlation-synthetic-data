@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 
 
-def generate_basic_order_of_features(
+def generate_correlation_based_order_of_features(
     feature_correlation: pd.DataFrame, correlation_treshold: int = 0.2
 ) -> pd.DataFrame:
     feature_correlation = abs(feature_correlation)
