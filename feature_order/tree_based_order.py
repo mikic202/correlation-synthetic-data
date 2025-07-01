@@ -15,7 +15,9 @@ def generate_tree_based_order_of_features(
             rf = RandomForestRegressor()
         rf.fit(dataset.drop(feature, axis=1), dataset[feature])
         idx_to_update = list(range(i)) + list(range(i + 1, len(dataset.columns)))
-        feature_importances[idx_to_update] += rf.feature_importances_
+        feature_importances[idx_to_update] += np.mean(
+            [tree.feature_importances_ for tree in rf.estimators_], axis=0
+        )
     return (
         list(reversed(dataset.columns[np.argsort(feature_importances)[::-1]].to_list()))
         if ascending
