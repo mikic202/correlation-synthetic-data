@@ -3,6 +3,8 @@ from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
 from xgboost import XGBClassifier, XGBRegressor
 import pandas as pd
 
+MAX_UNIQUE_FEATURES_AS_CATHEGORICAL = 10
+
 
 def generate_tree_based_order_of_features(
     dataset: pd.DataFrame, ascending=True
@@ -10,7 +12,7 @@ def generate_tree_based_order_of_features(
     feature_importances = np.zeros(len(dataset.columns))
 
     for i, feature in enumerate(dataset.columns):
-        if dataset[feature].dtype == "int64":
+        if dataset[feature].nunique() <= MAX_UNIQUE_FEATURES_AS_CATHEGORICAL:
             rf = RandomForestClassifier()
         else:
             rf = RandomForestRegressor()
@@ -32,10 +34,10 @@ def generate_xgboost_based_order_of_features(
     feature_importances = np.zeros(len(dataset.columns))
 
     n_estimators = len(dataset.columns) * 2
-    max_depth = len(dataset.columns) // 2
+    max_depth = max(len(dataset.columns) // 5, 4)
 
     for i, feature in enumerate(dataset.columns):
-        if dataset[feature].dtype == "int64":
+        if dataset[feature].nunique() <= MAX_UNIQUE_FEATURES_AS_CATHEGORICAL:
             rf = XGBClassifier(
                 n_estimators=n_estimators,
                 max_depth=max_depth,
@@ -47,7 +49,7 @@ def generate_xgboost_based_order_of_features(
                 n_estimators=n_estimators,
                 max_depth=max_depth,
                 learning_rate=1,
-                objective="reg:squarederror",
+                objective="reg:squaredlogerror",
             )
         rf.fit(dataset.drop(feature, axis=1), dataset[feature])
         idx_to_update = list(range(i)) + list(range(i + 1, len(dataset.columns)))
