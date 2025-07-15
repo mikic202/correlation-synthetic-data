@@ -1,4 +1,10 @@
-from test_datasets.dataset_getters import get_pc4_dataset, get_mfeat_zernike_dataset
+from test_datasets.dataset_getters import (
+    get_pc4_dataset,
+    get_mfeat_zernike_dataset,
+    get_climate_model_simulation_dataset,
+    get_wdbc_dataset,
+    get_analcatdata_authorship_dataset,
+)
 from performance_metrics.measure_logistic_regresion_auc import (
     measure_logistic_regresion_auc,
 )
@@ -12,6 +18,9 @@ import pandas as pd
 AVAILABLE_DATASETS = {
     "mfeat_zernike": get_mfeat_zernike_dataset,
     "pc4": get_pc4_dataset,
+    "climate_model_simulation": get_climate_model_simulation_dataset,
+    "wdbc": get_wdbc_dataset,
+    "analcatdata_authorship": get_analcatdata_authorship_dataset,
 }
 
 
