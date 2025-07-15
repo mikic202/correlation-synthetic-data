@@ -1,6 +1,7 @@
 import pandas as pd
 from xgboost import XGBClassifier
 from sklearn.metrics import roc_auc_score
+import numpy as np
 
 
 def measure_xgb_auc(
@@ -20,6 +21,15 @@ def measure_xgb_auc(
             learning_rate=1,
             objective="binary:logistic",
         ).fit(synt_x, synth_y)
+        if len(np.unique(synth_y)) > 2:
+            areas_under_curve.append(
+                roc_auc_score(
+                    real_y,
+                    random_forest_clasifier.predict_proba(reral_x),
+                    multi_class="ovr",
+                )
+            )
+            continue
         areas_under_curve.append(
             roc_auc_score(real_y, random_forest_clasifier.predict_proba(reral_x)[:, 1])
         )

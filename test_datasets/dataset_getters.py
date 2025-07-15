@@ -16,4 +16,5 @@ def get_mfeat_zernike_dataset(
     dataset, _, _, _ = openml.datasets.get_dataset(22).get_data(
         dataset_format="dataframe"
     )
+    dataset = dataset.rename(columns={"class": "c"}).astype("float32")
     return train_test_split(dataset, test_size=test_size)
