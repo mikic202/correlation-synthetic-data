@@ -21,15 +21,14 @@ def generate_graph_form_adjecency_matrix(
     for row, column in zip(rows, cols):
         weight = adjacency_matrix[row, column]
         graph.add_edge(mylabels[row], mylabels[column], weight=weight)
-    if not draw:
-        return graph
-    nx.draw(
-        graph,
-        node_size=900,
-        labels={label: label for label in mylabels},
-        with_labels=True,
-    )
-    plt.show()
+    if draw:
+        nx.draw(
+            graph,
+            node_size=900,
+            labels={label: label for label in mylabels},
+            with_labels=True,
+        )
+        plt.show()
     return graph
 
 

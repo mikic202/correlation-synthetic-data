@@ -3,9 +3,13 @@ import pandas as pd
 import polars as pl
 
 
+FEATURE_IMPORTANCE_ORDER = ["count", "max", "min", "sum"]
+
+
 def generate_correlation_based_order_of_features(
     feature_correlation: pd.DataFrame, correlation_treshold: int = 0.2
 ) -> pd.DataFrame:
+
     feature_correlation = abs(feature_correlation)
     mask = feature_correlation < correlation_treshold
     feature_correlation[mask] = 0.0
@@ -20,7 +24,7 @@ def generate_correlation_based_order_of_features(
             }
         )
         .fillna(0)
-        .sort_values(by=["count", "max", "min", "sum"])
+        .sort_values(by=FEATURE_IMPORTANCE_ORDER)
     )
 
 
@@ -53,4 +57,4 @@ def generate_correlation_based_order_of_features_polars(
             ).row(0),
             "sum": feature_correlation.sum().row(0),
         }
-    ).sort(by=["count", "max", "min", "sum"])
+    ).sort(by=FEATURE_IMPORTANCE_ORDER)
