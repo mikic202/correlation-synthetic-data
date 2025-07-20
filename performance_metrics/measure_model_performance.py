@@ -8,6 +8,8 @@ from test_datasets.dataset_getters import (
     get_sleep_deprivation_and_cognitive_performance_regression_dataset,
     get_superconduct_regression_dataset,
     get_house_prices_regression_dataset,
+    REGRESION_TARGET,
+    CLASYFICATION_TARGET,
 )
 from performance_metrics.measure_area_under_curve import (
     measure_logistic_regresion_auc,
@@ -61,7 +63,10 @@ def measure_model_performance(model, **kwargs):
     )
     for dataset_name, dataset_getter in AVAILABLE_DATASETS.items():
         train, _ = dataset_getter()
-        real_x, real_y = train.drop("c", axis=1), train["c"].to_list()
+        real_x, real_y = (
+            train.drop(CLASYFICATION_TARGET, axis=1),
+            train[CLASYFICATION_TARGET].to_list(),
+        )
         synth_x, synth_y = model(
             real_x,
             real_y,
@@ -98,13 +103,19 @@ def measure_regresion_model_performance(model, **kwargs):
     for dataset_name, dataset_getter in AVALIABLE_REGRESSION_DATASETS.items():
         train, test = dataset_getter()
         train = train[: min(10000, len(train))]  # CUDA out of memory error prevention
-        real_x, real_y = train.drop("target", axis=1), train["target"].to_numpy()
+        real_x, real_y = (
+            train.drop(REGRESION_TARGET, axis=1),
+            train[REGRESION_TARGET].to_numpy(),
+        )
         synth_x, synth_y = model(
             real_x,
             real_y,
             n_samples=real_x.shape[0],
         )
-        real_x, real_y = test.drop("target", axis=1), test["target"].to_numpy()
+        real_x, real_y = (
+            test.drop(REGRESION_TARGET, axis=1),
+            test[REGRESION_TARGET].to_numpy(),
+        )
         results.loc[-1] = [dataset_name, 0.0, 0.0, 0.0, 0.0]
         results.loc[-1, RANDOM_FOREST_COLUMN] = (
             measure_random_forest_mean_absolute_error(
