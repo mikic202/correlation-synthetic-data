@@ -143,4 +143,5 @@ def get_house_prices_regression_dataset(
     for feature_to_factorize in nominal_features:
         dataset[feature_to_factorize] = dataset[feature_to_factorize].factorize()[0]
     dataset = dataset.rename(columns={"SalePrice": REGRESION_TARGET})
+    dataset = dataset.dropna()
     return train_test_split(dataset, test_size=test_size)
