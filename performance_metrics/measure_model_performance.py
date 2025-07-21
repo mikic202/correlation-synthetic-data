@@ -72,7 +72,9 @@ def measure_model_performance(model, **kwargs):
             real_y,
             n_samples=real_x.shape[0],
             balance_classes=True,
+            **kwargs,
         )
+        synth_x = pd.DataFrame(synth_x, columns=real_x.columns)
         results.loc[-1] = [dataset_name, 0.0, 0.0, 0.0, 0.0]
         results.loc[-1, RANDOM_FOREST_COLUMN] = measure_random_forest_auc(
             [synth_x], [synth_y], real_x, real_y
@@ -111,6 +113,7 @@ def measure_regresion_model_performance(model, **kwargs):
             real_x,
             real_y,
             n_samples=real_x.shape[0],
+            **kwargs,
         )
         real_x, real_y = (
             test.drop(REGRESION_TARGET, axis=1),
