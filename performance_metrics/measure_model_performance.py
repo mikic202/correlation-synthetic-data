@@ -62,10 +62,14 @@ def measure_model_performance(model, **kwargs):
         ]
     )
     for dataset_name, dataset_getter in AVAILABLE_DATASETS.items():
-        train, _ = dataset_getter()
+        train, test = dataset_getter()
         real_x, real_y = (
             train.drop(CLASYFICATION_TARGET, axis=1),
             train[CLASYFICATION_TARGET].to_list(),
+        )
+        test_x, test_y = (
+            test.drop(CLASYFICATION_TARGET, axis=1),
+            test[CLASYFICATION_TARGET].to_list(),
         )
         synth_x, synth_y = model(
             real_x,
@@ -77,16 +81,16 @@ def measure_model_performance(model, **kwargs):
         synth_x = pd.DataFrame(synth_x, columns=real_x.columns)
         results.loc[-1] = [dataset_name, 0.0, 0.0, 0.0, 0.0]
         results.loc[-1, RANDOM_FOREST_COLUMN] = measure_random_forest_auc(
-            [synth_x], [synth_y], real_x, real_y
+            [synth_x], [synth_y], test_x, test_y
         )
         results.loc[-1, XGBOOST_COLUMN] = measure_xgb_auc(
-            [synth_x], [synth_y], real_x, real_y
+            [synth_x], [synth_y], test_x, test_y
         )
         results.loc[-1, LOGISTIC_REGRESION_COLUMN] = measure_logistic_regresion_auc(
-            [synth_x], [synth_y], real_x, real_y
+            [synth_x], [synth_y], test_x, test_y
         )
         results.loc[-1, TABPFN_COLUMN] = measure_tabpfn_auc(
-            [synth_x], [synth_y], real_x, real_y
+            [synth_x], [synth_y], test_x, test_y
         )
         results.index = results.index + 1
     return results
