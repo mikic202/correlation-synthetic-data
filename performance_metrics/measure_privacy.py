@@ -1,6 +1,7 @@
 import pandas as pd
 from sklearn.cluster import KMeans
-from sklearn.metrics import silhouette_samples, silhouette_score
+from sklearn.neighbors import NearestNeighbors
+from sklearn.metrics import silhouette_score
 import numpy as np
 from heapq import nsmallest
 
@@ -27,3 +28,22 @@ def calculate_k_anonimity_for_datset(
         nsmallest(MAX_NUMBER_OF_CLUSTERS // 5, smallest_ks, key=lambda x: -x[0]),
         key=lambda x: x[1],
     )[0][1]
+
+
+def calculate_distance_to_nearest_neighbour(
+    dataset: pd.DataFrame,
+    test_dataset: pd.DataFrame,
+    identifier_atributes: list[str] | None = None,
+) -> float:
+    if not identifier_atributes:
+        identifier_atributes = dataset.columns.tolist()
+    dataset = dataset[identifier_atributes]
+    model = NearestNeighbors(n_neighbors=2)
+    model.fit(dataset)
+    distances, _ = model.kneighbors(dataset)
+    print(list(distances[:, 1]))
+    return {
+        "mean": np.mean(distances[:, 1]),
+        "std": np.std(distances[:, 1]),
+        "median": np.median(distances[:, 1]),
+    }
