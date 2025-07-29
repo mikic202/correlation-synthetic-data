@@ -32,7 +32,6 @@ def calculate_k_anonimity_for_datset(
 
 def calculate_distance_to_nearest_neighbour(
     dataset: pd.DataFrame,
-    test_dataset: pd.DataFrame,
     identifier_atributes: list[str] | None = None,
 ) -> float:
     if not identifier_atributes:

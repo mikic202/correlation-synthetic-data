@@ -23,6 +23,11 @@ from performance_metrics.measure_mean_absolute_error import (
     measure_xgb_mean_absolute_error,
     measure_tab_pfn_mean_absolute_error,
 )
+
+from performance_metrics.measure_privacy import (
+    calculate_k_anonimity_for_datset,
+    calculate_distance_to_nearest_neighbour,
+)
 import pandas as pd
 
 
@@ -140,5 +145,49 @@ def measure_regresion_model_performance(model, **kwargs):
                 [synth_x], [synth_y], real_x, real_y
             )
         )
+        results.index = results.index + 1
+    return results
+
+
+def measure_k_anonimity(model, **kwargs):
+    results = pd.DataFrame(columns=[DATASET_COLUMN, "k_anonimity"])
+    for dataset_name, dataset_getter in AVAILABLE_DATASETS.items():
+        train, _ = dataset_getter()
+        real_x, real_y = (
+            train.drop(CLASYFICATION_TARGET, axis=1),
+            train[CLASYFICATION_TARGET].to_numpy(),
+        )
+        synth_x, synth_y = model(
+            real_x[:1000],  # Limit to 1000 samples to avoid memory issues
+            real_y[:1000],
+            n_samples=100,
+            **kwargs,
+        )
+        k_anonimity = calculate_k_anonimity_for_datset(
+            pd.DataFrame(synth_x, columns=real_x.columns)
+        )
+        results.loc[-1] = [dataset_name, k_anonimity]
+        results.index = results.index + 1
+    return results
+
+
+def measure_distance_to_nearest_neighbour(model, **kwargs):
+    results = pd.DataFrame(columns=[DATASET_COLUMN, "mean", "std", "median"])
+    for dataset_name, dataset_getter in AVAILABLE_DATASETS.items():
+        train, _ = dataset_getter()
+        real_x, real_y = (
+            train.drop(CLASYFICATION_TARGET, axis=1),
+            train[CLASYFICATION_TARGET].to_numpy(),
+        )
+        synth_x, _ = model(
+            real_x[:1000],  # Limit to 1000 samples to avoid memory issues
+            real_y[:1000],
+            n_samples=100,
+            **kwargs,
+        )
+        distances = calculate_distance_to_nearest_neighbour(
+            pd.DataFrame(synth_x, columns=real_x.columns)
+        )
+        results.loc[-1] = [dataset_name, *list(distances.values())]
         results.index = results.index + 1
     return results
