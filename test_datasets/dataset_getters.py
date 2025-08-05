@@ -11,6 +11,7 @@ def get_pc4_dataset(test_size: float = 0.1) -> tuple[pd.DataFrame, pd.DataFrame]
     dataset, _, _, _ = openml.datasets.get_dataset(1049).get_data(
         dataset_format="dataframe"
     )
+    dataset[CLASYFICATION_TARGET] = dataset[CLASYFICATION_TARGET].astype(int)
     return train_test_split(dataset, test_size=test_size)
 
 

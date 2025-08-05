@@ -33,14 +33,13 @@ def calculate_k_anonimity_for_datset(
 def calculate_distance_to_nearest_neighbour(
     dataset: pd.DataFrame,
     identifier_atributes: list[str] | None = None,
-) -> float:
+) -> dict[str, float]:
     if not identifier_atributes:
         identifier_atributes = dataset.columns.tolist()
     dataset = dataset[identifier_atributes]
     model = NearestNeighbors(n_neighbors=2)
     model.fit(dataset)
     distances, _ = model.kneighbors(dataset)
-    print(list(distances[:, 1]))
     return {
         "mean": np.mean(distances[:, 1]),
         "std": np.std(distances[:, 1]),
