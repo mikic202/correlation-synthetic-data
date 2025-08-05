@@ -158,9 +158,9 @@ def measure_k_anonimity(model, **kwargs):
             train[CLASYFICATION_TARGET].to_numpy(),
         )
         synth_x, synth_y = model(
-            real_x[:1000],  # Limit to 1000 samples to avoid memory issues
-            real_y[:1000],
-            n_samples=100,
+            real_x,
+            real_y,
+            n_samples=real_x.shape[0],
             **kwargs,
         )
         k_anonimity = calculate_k_anonimity_for_datset(
@@ -171,7 +171,23 @@ def measure_k_anonimity(model, **kwargs):
     return results
 
 
-def measure_distance_to_nearest_neighbour(model, **kwargs):
+def measure_distance_to_nearest_neighbour_once(
+    model, real_x: pd.DataFrame, real_y: pd.DataFrame, **kwargs
+) -> dict[str, float]:
+    synth_x, _ = model(
+        real_x,
+        real_y,
+        n_samples=250,
+        **kwargs,
+    )
+    return calculate_distance_to_nearest_neighbour(
+        pd.DataFrame(synth_x, columns=real_x.columns)
+    )
+
+
+def measure_distance_to_nearest_neighbour(
+    model, number_of_repetitions: int = 5, **kwargs
+) -> pd.DataFrame:
     results = pd.DataFrame(columns=[DATASET_COLUMN, "mean", "std", "median"])
     for dataset_name, dataset_getter in AVAILABLE_DATASETS.items():
         train, _ = dataset_getter()
@@ -179,15 +195,14 @@ def measure_distance_to_nearest_neighbour(model, **kwargs):
             train.drop(CLASYFICATION_TARGET, axis=1),
             train[CLASYFICATION_TARGET].to_numpy(),
         )
-        synth_x, _ = model(
-            real_x[:1000],  # Limit to 1000 samples to avoid memory issues
-            real_y[:1000],
-            n_samples=100,
-            **kwargs,
-        )
-        distances = calculate_distance_to_nearest_neighbour(
-            pd.DataFrame(synth_x, columns=real_x.columns)
-        )
-        results.loc[-1] = [dataset_name, *list(distances.values())]
+        single_dataset_distances = pd.DataFrame(columns=["mean", "std", "median"])
+        for _ in range(number_of_repetitions):
+            single_dataset_distances.loc[-1] = (
+                measure_distance_to_nearest_neighbour_once(
+                    model, real_x[:1000], real_y[:1000], **kwargs
+                ).values()
+            )
+            single_dataset_distances.index = single_dataset_distances.index + 1
+        results.loc[-1] = [dataset_name, *(single_dataset_distances.mean().to_list())]
         results.index = results.index + 1
     return results
