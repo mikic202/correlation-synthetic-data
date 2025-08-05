@@ -29,6 +29,7 @@ from performance_metrics.measure_privacy import (
     calculate_distance_to_nearest_neighbour,
 )
 import pandas as pd
+import numpy as np
 
 
 AVAILABLE_DATASETS = {
@@ -149,7 +150,21 @@ def measure_regresion_model_performance(model, **kwargs):
     return results
 
 
-def measure_k_anonimity(model, **kwargs):
+def measure_k_anonimity_once(
+    model, real_x: pd.DataFrame, real_y: pd.DataFrame, **kwargs
+) -> float:
+    synth_x, _ = model(
+        real_x,
+        real_y,
+        n_samples=250,
+        **kwargs,
+    )
+    return calculate_k_anonimity_for_datset(
+        pd.DataFrame(synth_x, columns=real_x.columns)
+    )
+
+
+def measure_k_anonimity(model, number_of_repetitions: int = 5, **kwargs):
     results = pd.DataFrame(columns=[DATASET_COLUMN, "k_anonimity"])
     for dataset_name, dataset_getter in AVAILABLE_DATASETS.items():
         train, _ = dataset_getter()
@@ -157,16 +172,12 @@ def measure_k_anonimity(model, **kwargs):
             train.drop(CLASYFICATION_TARGET, axis=1),
             train[CLASYFICATION_TARGET].to_numpy(),
         )
-        synth_x, synth_y = model(
-            real_x,
-            real_y,
-            n_samples=real_x.shape[0],
-            **kwargs,
-        )
-        k_anonimity = calculate_k_anonimity_for_datset(
-            pd.DataFrame(synth_x, columns=real_x.columns)
-        )
-        results.loc[-1] = [dataset_name, k_anonimity]
+        single_dataset_k_values = []
+        for _ in range(number_of_repetitions):
+            single_dataset_k_values.append(
+                measure_k_anonimity_once(model, real_x[:1000], real_y[:1000], **kwargs)
+            )
+        results.loc[-1] = [dataset_name, np.mean(single_dataset_k_values)]
         results.index = results.index + 1
     return results
 
