@@ -57,7 +57,31 @@ LOGISTIC_REGRESION_COLUMN = "LR"
 LINEAR_REGRESION_COLUMN = "linear_regression"
 
 
-def measure_model_performance(model, **kwargs):
+def measure_model_clasification_performance_once(
+    model,
+    real_x: pd.DataFrame,
+    real_y: pd.DataFrame,
+    test_x: pd.DataFrame,
+    test_y: pd.DataFrame,
+    **kwargs
+) -> list[float]:
+    synth_x, synth_y = model(
+        real_x,
+        real_y,
+        n_samples=real_x.shape[0],
+        balance_classes=True,
+        **kwargs,
+    )
+    synth_x = pd.DataFrame(synth_x, columns=real_x.columns)
+    return [
+        measure_random_forest_auc([synth_x], [synth_y], test_x, test_y)[0],
+        measure_xgb_auc([synth_x], [synth_y], test_x, test_y)[0],
+        measure_logistic_regresion_auc([synth_x], [synth_y], test_x, test_y)[0],
+        measure_tabpfn_auc([synth_x], [synth_y], test_x, test_y)[0],
+    ]
+
+
+def measure_model_clasification_performance(model, number_of_repetitions: int = 5, **kwargs):
     results = pd.DataFrame(
         columns=[
             DATASET_COLUMN,
@@ -69,6 +93,7 @@ def measure_model_performance(model, **kwargs):
     )
     for dataset_name, dataset_getter in AVAILABLE_DATASETS.items():
         train, test = dataset_getter()
+        downstream_accuracies = np.array([0.0, 0.0, 0.0, 0.0])
         real_x, real_y = (
             train.drop(CLASYFICATION_TARGET, axis=1),
             train[CLASYFICATION_TARGET].to_list(),
@@ -77,27 +102,13 @@ def measure_model_performance(model, **kwargs):
             test.drop(CLASYFICATION_TARGET, axis=1),
             test[CLASYFICATION_TARGET].to_list(),
         )
-        synth_x, synth_y = model(
-            real_x,
-            real_y,
-            n_samples=real_x.shape[0],
-            balance_classes=True,
-            **kwargs,
-        )
-        synth_x = pd.DataFrame(synth_x, columns=real_x.columns)
-        results.loc[-1] = [dataset_name, 0.0, 0.0, 0.0, 0.0]
-        results.loc[-1, RANDOM_FOREST_COLUMN] = measure_random_forest_auc(
-            [synth_x], [synth_y], test_x, test_y
-        )
-        results.loc[-1, XGBOOST_COLUMN] = measure_xgb_auc(
-            [synth_x], [synth_y], test_x, test_y
-        )
-        results.loc[-1, LOGISTIC_REGRESION_COLUMN] = measure_logistic_regresion_auc(
-            [synth_x], [synth_y], test_x, test_y
-        )
-        results.loc[-1, TABPFN_COLUMN] = measure_tabpfn_auc(
-            [synth_x], [synth_y], test_x, test_y
-        )
+        for _ in range(number_of_repetitions):
+            downstream_accuracies += np.array(
+                measure_model_clasification_performance_once(
+                    model, real_x, real_y, test_x, test_y, **kwargs
+                )
+            )
+        results.loc[-1] = [dataset_name] + downstream_accuracies.tolist()
         results.index = results.index + 1
     return results
 
