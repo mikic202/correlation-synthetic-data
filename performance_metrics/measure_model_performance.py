@@ -81,7 +81,9 @@ def measure_model_clasification_performance_once(
     ]
 
 
-def measure_model_clasification_performance(model, number_of_repetitions: int = 5, **kwargs):
+def measure_model_clasification_performance(
+    model, number_of_repetitions: int = 5, **kwargs
+):
     results = pd.DataFrame(
         columns=[
             DATASET_COLUMN,
@@ -108,12 +110,41 @@ def measure_model_clasification_performance(model, number_of_repetitions: int = 
                     model, real_x, real_y, test_x, test_y, **kwargs
                 )
             )
+        downstream_accuracies /= number_of_repetitions
         results.loc[-1] = [dataset_name] + downstream_accuracies.tolist()
         results.index = results.index + 1
     return results
 
 
-def measure_regresion_model_performance(model, **kwargs):
+def measure_regresion_model_performance_once(
+    model,
+    real_x: pd.DataFrame,
+    real_y: pd.DataFrame,
+    test_x: pd.DataFrame,
+    test_y: pd.DataFrame,
+    **kwargs
+) -> list[float]:
+    synth_x, synth_y = model(
+        real_x,
+        real_y,
+        n_samples=real_x.shape[0],
+        **kwargs,
+    )
+    return [
+        measure_random_forest_mean_absolute_error([synth_x], [synth_y], test_x, test_y)[
+            0
+        ],
+        measure_xgb_mean_absolute_error([synth_x], [synth_y], test_x, test_y)[0],
+        measure_tab_pfn_mean_absolute_error([synth_x], [synth_y], test_x, test_y)[0],
+        measure_linear_regresion_mean_absolute_error(
+            [synth_x], [synth_y], test_x, test_y
+        )[0],
+    ]
+
+
+def measure_regresion_model_performance(
+    model, number_of_repetitions: int = 5, **kwargs
+):
     results = pd.DataFrame(
         columns=[
             DATASET_COLUMN,
@@ -124,39 +155,25 @@ def measure_regresion_model_performance(model, **kwargs):
         ]
     )
     for dataset_name, dataset_getter in AVALIABLE_REGRESSION_DATASETS.items():
+        downstream_accuracies = np.array([0.0, 0.0, 0.0, 0.0])
         train, test = dataset_getter()
         train = train[: min(10000, len(train))]  # CUDA out of memory error prevention
         real_x, real_y = (
             train.drop(REGRESION_TARGET, axis=1),
             train[REGRESION_TARGET].to_numpy(),
         )
-        synth_x, synth_y = model(
-            real_x,
-            real_y,
-            n_samples=real_x.shape[0],
-            **kwargs,
-        )
-        real_x, real_y = (
+        test_x, test_y = (
             test.drop(REGRESION_TARGET, axis=1),
             test[REGRESION_TARGET].to_numpy(),
         )
-        results.loc[-1] = [dataset_name, 0.0, 0.0, 0.0, 0.0]
-        results.loc[-1, RANDOM_FOREST_COLUMN] = (
-            measure_random_forest_mean_absolute_error(
-                [synth_x], [synth_y], real_x, real_y
+        for _ in range(number_of_repetitions):
+            downstream_accuracies += np.array(
+                measure_regresion_model_performance_once(
+                    model, real_x, real_y, test_x, test_y, **kwargs
+                )
             )
-        )
-        results.loc[-1, XGBOOST_COLUMN] = measure_xgb_mean_absolute_error(
-            [synth_x], [synth_y], real_x, real_y
-        )
-        results.loc[-1, TABPFN_COLUMN] = measure_tab_pfn_mean_absolute_error(
-            [synth_x], [synth_y], real_x, real_y
-        )
-        results.loc[-1, LINEAR_REGRESION_COLUMN] = (
-            measure_linear_regresion_mean_absolute_error(
-                [synth_x], [synth_y], real_x, real_y
-            )
-        )
+        downstream_accuracies /= number_of_repetitions
+        results.loc[-1] = [dataset_name] + downstream_accuracies.tolist()
         results.index = results.index + 1
     return results
 
