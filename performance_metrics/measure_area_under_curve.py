@@ -5,6 +5,7 @@ from sklearn.ensemble import RandomForestClassifier
 from xgboost import XGBClassifier
 from tabpfn import TabPFNClassifier
 from sklearn.linear_model import LogisticRegression
+import torch
 
 
 NUMBER_OF_UNIQUE_ELEMENTS_FOR_BINARY_CLASIFICATION = 2
@@ -21,7 +22,7 @@ def measuer_roc(
     areas_under_curve = []
     for synt_x, synth_y in zip(synthetic_x, synthetic_y):
         clasifier = model_class(**kwargs).fit(synt_x, synth_y)
-        if len(np.unique(synth_y)) > NUMBER_OF_UNIQUE_ELEMENTS_FOR_BINARY_CLASIFICATION:
+        if len(np.unique(real_y)) > NUMBER_OF_UNIQUE_ELEMENTS_FOR_BINARY_CLASIFICATION:
             areas_under_curve.append(
                 roc_auc_score(
                     real_y,
@@ -44,11 +45,7 @@ def measure_logistic_regresion_auc(
 ):
 
     return measuer_roc(
-        synthetic_x,
-        synthetic_y,
-        reral_x,
-        real_y,
-        LogisticRegression,
+        synthetic_x, synthetic_y, reral_x, real_y, LogisticRegression, max_iter=1000
     )
 
 
@@ -80,6 +77,7 @@ def measure_tabpfn_auc(
         real_y,
         TabPFNClassifier,
         n_estimators=len(reral_x.columns) * 2,
+        device=("cuda" if torch.cuda.is_available() else "cpu"),
     )
 
 
