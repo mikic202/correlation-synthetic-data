@@ -30,6 +30,8 @@ from performance_metrics.measure_privacy import (
 )
 import pandas as pd
 import numpy as np
+import multiprocessing as mp
+from multiprocessing import Process, Queue
 
 
 AVAILABLE_DATASETS = {
@@ -57,28 +59,113 @@ LOGISTIC_REGRESION_COLUMN = "LR"
 LINEAR_REGRESION_COLUMN = "linear_regression"
 
 
+def random_forest_process(
+    downstream_results_queue: Queue,
+    synth_x: pd.DataFrame,
+    synth_y: pd.DataFrame,
+    test_x: pd.DataFrame,
+    test_y: pd.DataFrame,
+):
+    downstream_results_queue.put(
+        (0, measure_random_forest_auc([synth_x], [synth_y], test_x, test_y)[0])
+    )
+
+
+def xgb_process(
+    downstream_results_queue: Queue,
+    synth_x: pd.DataFrame,
+    synth_y: pd.DataFrame,
+    test_x: pd.DataFrame,
+    test_y: pd.DataFrame,
+):
+    downstream_results_queue.put(
+        (1, measure_xgb_auc([synth_x], [synth_y], test_x, test_y)[0])
+    )
+
+
+def tabpfn_process(
+    downstream_results_queue: Queue,
+    synth_x: pd.DataFrame,
+    synth_y: pd.DataFrame,
+    test_x: pd.DataFrame,
+    test_y: pd.DataFrame,
+):
+    downstream_results_queue.put(
+        (2, measure_tabpfn_auc([synth_x], [synth_y], test_x, test_y)[0])
+    )
+
+
+def logistic_regression_process(
+    downstream_results_queue: Queue,
+    synth_x: pd.DataFrame,
+    synth_y: pd.DataFrame,
+    test_x: pd.DataFrame,
+    test_y: pd.DataFrame,
+):
+    downstream_results_queue.put(
+        (3, measure_logistic_regresion_auc([synth_x], [synth_y], test_x, test_y)[0])
+    )
+
+
 def measure_model_clasification_performance_once(
     model,
     real_x: pd.DataFrame,
     real_y: pd.DataFrame,
     test_x: pd.DataFrame,
     test_y: pd.DataFrame,
-    **kwargs
+    **kwargs,
 ) -> list[float]:
+    mp.set_start_method("spawn", force=True)
     synth_x, synth_y = model(
         real_x,
         real_y,
-        n_samples=real_x.shape[0],
+        n_samples=500,
         balance_classes=True,
         **kwargs,
     )
     synth_x = pd.DataFrame(synth_x, columns=real_x.columns)
-    return [
-        measure_random_forest_auc([synth_x], [synth_y], test_x, test_y)[0],
-        measure_xgb_auc([synth_x], [synth_y], test_x, test_y)[0],
-        measure_logistic_regresion_auc([synth_x], [synth_y], test_x, test_y)[0],
-        measure_tabpfn_auc([synth_x], [synth_y], test_x, test_y)[0],
+    downstream_results_queue = Queue()
+    downstream_jobs = []
+
+    downstream_jobs.append(
+        Process(
+            target=random_forest_process,
+            args=(downstream_results_queue, synth_x, synth_y, test_x, test_y),
+        )
+    )
+
+    downstream_jobs.append(
+        Process(
+            target=xgb_process,
+            args=(downstream_results_queue, synth_x, synth_y, test_x, test_y),
+        )
+    )
+    downstream_jobs.append(
+        Process(
+            target=tabpfn_process,
+            args=(downstream_results_queue, synth_x, synth_y, test_x, test_y),
+        )
+    )
+    downstream_jobs.append(
+        Process(
+            target=logistic_regression_process,
+            args=(downstream_results_queue, synth_x, synth_y, test_x, test_y),
+        )
+    )
+
+    for job in downstream_jobs:
+        job.start()
+    for job in downstream_jobs:
+        print(f"Waiting for {job.name} to finish...")
+        job.join()
+    a = [
+        accuracy
+        for _, accuracy in sorted(
+            downstream_results_queue.get() for _ in range(len(downstream_jobs))
+        )
     ]
+    print(a)
+    return a
 
 
 def measure_model_clasification_performance(
@@ -122,7 +209,7 @@ def measure_regresion_model_performance_once(
     real_y: pd.DataFrame,
     test_x: pd.DataFrame,
     test_y: pd.DataFrame,
-    **kwargs
+    **kwargs,
 ) -> list[float]:
     synth_x, synth_y = model(
         real_x,

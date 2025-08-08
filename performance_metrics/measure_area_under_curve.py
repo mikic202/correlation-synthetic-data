@@ -17,7 +17,7 @@ def measuer_roc(
     reral_x: pd.DataFrame,
     real_y: list[int],
     model_class,
-    **kwargs
+    **kwargs,
 ):
     areas_under_curve = []
     for synt_x, synth_y in zip(synthetic_x, synthetic_y):
@@ -43,9 +43,19 @@ def measure_logistic_regresion_auc(
     reral_x: pd.DataFrame,
     real_y: list[int],
 ):
-
     return measuer_roc(
-        synthetic_x, synthetic_y, reral_x, real_y, LogisticRegression, max_iter=1000
+        synthetic_x,
+        synthetic_y,
+        reral_x,
+        real_y,
+        LogisticRegression,
+        solver="saga",
+        penalty="l2",
+        C=1.0,
+        tol=1e-3,
+        max_iter=500,
+        n_jobs=-1,
+        multi_class="auto",
     )
 
 
