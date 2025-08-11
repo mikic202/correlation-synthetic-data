@@ -113,13 +113,14 @@ def measure_model_clasification_performance_once(
     real_y: pd.DataFrame,
     test_x: pd.DataFrame,
     test_y: pd.DataFrame,
+    n_samples: int | None = None,
     **kwargs,
 ) -> list[float]:
     mp.set_start_method("spawn", force=True)
     synth_x, synth_y = model(
         real_x,
         real_y,
-        n_samples=500,
+        n_samples=n_samples if n_samples else real_x.shape[0],
         balance_classes=True,
         **kwargs,
     )
@@ -164,12 +165,11 @@ def measure_model_clasification_performance_once(
             downstream_results_queue.get() for _ in range(len(downstream_jobs))
         )
     ]
-    print(a)
     return a
 
 
 def measure_model_clasification_performance(
-    model, number_of_repetitions: int = 5, **kwargs
+    model, number_of_repetitions: int = 5, n_samples: int | None = None, **kwargs
 ):
     results = pd.DataFrame(
         columns=[
@@ -194,7 +194,7 @@ def measure_model_clasification_performance(
         for _ in range(number_of_repetitions):
             downstream_accuracies += np.array(
                 measure_model_clasification_performance_once(
-                    model, real_x, real_y, test_x, test_y, **kwargs
+                    model, real_x, real_y, test_x, test_y, n_samples=n_samples, **kwargs
                 )
             )
         downstream_accuracies /= number_of_repetitions
@@ -209,12 +209,13 @@ def measure_regresion_model_performance_once(
     real_y: pd.DataFrame,
     test_x: pd.DataFrame,
     test_y: pd.DataFrame,
+    n_samples: int | None = None,
     **kwargs,
 ) -> list[float]:
     synth_x, synth_y = model(
         real_x,
         real_y,
-        n_samples=real_x.shape[0],
+        n_samples=n_samples if n_samples else real_x.shape[0],
         **kwargs,
     )
     return [
@@ -230,7 +231,7 @@ def measure_regresion_model_performance_once(
 
 
 def measure_regresion_model_performance(
-    model, number_of_repetitions: int = 5, **kwargs
+    model, number_of_repetitions: int = 5, n_samples: int | None = None, **kwargs
 ):
     results = pd.DataFrame(
         columns=[
@@ -256,7 +257,7 @@ def measure_regresion_model_performance(
         for _ in range(number_of_repetitions):
             downstream_accuracies += np.array(
                 measure_regresion_model_performance_once(
-                    model, real_x, real_y, test_x, test_y, **kwargs
+                    model, real_x, real_y, test_x, test_y, n_samples=n_samples, **kwargs
                 )
             )
         downstream_accuracies /= number_of_repetitions
@@ -266,12 +267,16 @@ def measure_regresion_model_performance(
 
 
 def measure_k_anonimity_once(
-    model, real_x: pd.DataFrame, real_y: pd.DataFrame, **kwargs
+    model,
+    real_x: pd.DataFrame,
+    real_y: pd.DataFrame,
+    n_samples: int | None = None,
+    **kwargs,
 ) -> float:
     synth_x, _ = model(
         real_x,
         real_y,
-        n_samples=250,
+        n_samples=n_samples if n_samples else real_x.shape[0],
         **kwargs,
     )
     return calculate_k_anonimity_for_datset(
@@ -279,7 +284,9 @@ def measure_k_anonimity_once(
     )
 
 
-def measure_k_anonimity(model, number_of_repetitions: int = 5, **kwargs):
+def measure_k_anonimity(
+    model, number_of_repetitions: int = 5, n_samples: int | None = None, **kwargs
+):
     results = pd.DataFrame(columns=[DATASET_COLUMN, "k_anonimity"])
     for dataset_name, dataset_getter in AVAILABLE_DATASETS.items():
         train, _ = dataset_getter()
@@ -290,7 +297,9 @@ def measure_k_anonimity(model, number_of_repetitions: int = 5, **kwargs):
         single_dataset_k_values = []
         for _ in range(number_of_repetitions):
             single_dataset_k_values.append(
-                measure_k_anonimity_once(model, real_x[:1000], real_y[:1000], **kwargs)
+                measure_k_anonimity_once(
+                    model, real_x[:1000], real_y[:1000], n_samples=n_samples, **kwargs
+                )
             )
         results.loc[-1] = [dataset_name, np.mean(single_dataset_k_values)]
         results.index = results.index + 1
@@ -298,12 +307,16 @@ def measure_k_anonimity(model, number_of_repetitions: int = 5, **kwargs):
 
 
 def measure_distance_to_nearest_neighbour_once(
-    model, real_x: pd.DataFrame, real_y: pd.DataFrame, **kwargs
+    model,
+    real_x: pd.DataFrame,
+    real_y: pd.DataFrame,
+    n_samples: int | None = None,
+    **kwargs,
 ) -> dict[str, float]:
     synth_x, _ = model(
         real_x,
         real_y,
-        n_samples=250,
+        n_samples=n_samples if n_samples else real_x.shape[0],
         **kwargs,
     )
     return calculate_distance_to_nearest_neighbour(
@@ -312,7 +325,7 @@ def measure_distance_to_nearest_neighbour_once(
 
 
 def measure_distance_to_nearest_neighbour(
-    model, number_of_repetitions: int = 5, **kwargs
+    model, number_of_repetitions: int = 5, n_samples: int | None = None, **kwargs
 ) -> pd.DataFrame:
     results = pd.DataFrame(columns=[DATASET_COLUMN, "mean", "std", "median"])
     for dataset_name, dataset_getter in AVAILABLE_DATASETS.items():
@@ -325,7 +338,7 @@ def measure_distance_to_nearest_neighbour(
         for _ in range(number_of_repetitions):
             single_dataset_distances.loc[-1] = (
                 measure_distance_to_nearest_neighbour_once(
-                    model, real_x[:1000], real_y[:1000], **kwargs
+                    model, real_x[:1000], real_y[:1000], n_samples=n_samples, **kwargs
                 ).values()
             )
             single_dataset_distances.index = single_dataset_distances.index + 1
