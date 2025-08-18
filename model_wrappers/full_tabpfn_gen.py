@@ -10,7 +10,7 @@ class FullTabpfnGen(unsupervised.TabPFNUnsupervisedModel):
     def __init__(
         self,
         device,
-        column_order_getter: Callable[[pd.DataFrame, bool], list[str]] | None,
+        column_order_getter: Callable[[pd.DataFrame, bool], list[str]] | None = None,
     ):
         super().__init__(
             tabpfn_clf=TabPFNClassifier(device=device),
@@ -28,8 +28,10 @@ class FullTabpfnGen(unsupervised.TabPFNUnsupervisedModel):
         temp=1.0,
         **kwargs
     ):
-        X_train["trarget"] = y_train
-        data = torch.tensor(X_train.to_numpy())
+
+        train_data = X_train.copy()
+        train_data["target"] = y_train
+        data = torch.tensor(train_data.to_numpy())
 
         if self._column_order_getter:
             feature_order = self._column_order_getter(X_train)
@@ -52,4 +54,8 @@ class FullTabpfnGen(unsupervised.TabPFNUnsupervisedModel):
             n_samples=n_samples,
             t=temp,
         )
-        return synthetic_data
+        synthetic_data = pd.DataFrame(synthetic_data, columns=train_data.columns)
+        return (
+            synthetic_data.drop("target", axis=1),
+            (synthetic_data["target"].round() - 1).to_list(),
+        )
