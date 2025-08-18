@@ -6,6 +6,7 @@ from xgboost import XGBClassifier
 from tabpfn import TabPFNClassifier
 from sklearn.linear_model import LogisticRegression
 import torch
+from sklearn.preprocessing import StandardScaler
 
 
 NUMBER_OF_UNIQUE_ELEMENTS_FOR_BINARY_CLASIFICATION = 2
@@ -21,18 +22,22 @@ def measuer_roc(
 ):
     areas_under_curve = []
     for synt_x, synth_y in zip(synthetic_x, synthetic_y):
-        clasifier = model_class(**kwargs).fit(synt_x, synth_y)
+        scaler = StandardScaler()
+        scaler.fit(synt_x)
+        scalled_synth_x = scaler.transform(synt_x)
+        scalled_real_x = scaler.transform(reral_x)
+        clasifier = model_class(**kwargs).fit(scalled_synth_x, synth_y)
         if len(np.unique(real_y)) > NUMBER_OF_UNIQUE_ELEMENTS_FOR_BINARY_CLASIFICATION:
             areas_under_curve.append(
                 roc_auc_score(
                     real_y,
-                    clasifier.predict_proba(reral_x),
+                    clasifier.predict_proba(scalled_real_x),
                     multi_class="ovr",
                 )
             )
             continue
         areas_under_curve.append(
-            roc_auc_score(real_y, clasifier.predict_proba(reral_x)[:, 1])
+            roc_auc_score(real_y, clasifier.predict_proba(scalled_real_x)[:, 1])
         )
     return areas_under_curve
 
