@@ -11,7 +11,7 @@ def generate_graph_form_adjecency_matrix(
     adjacency_matrix: np.ndarray,
     mylabels: list[str],
     connection_cutoff: float = 0.3,
-    draw: bool = True,
+    draw: bool = False,
 ) -> nx.Graph:
     rows, cols = np.where(abs(adjacency_matrix) >= connection_cutoff)
     graph = nx.Graph()
