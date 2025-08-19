@@ -27,9 +27,8 @@ if __name__ == "__main__":
 
     for ordering_type in ordering_types:
         generator = FullTabpfnGen(str(device), ordering_types[ordering_type])
-        results = measure_model_clasification_performance(
-            generator, 1, n_samples=100
-        ).to_csv("ordering_type.csv")
+        results = measure_model_clasification_performance(generator, 1, n_samples=100)
+        results.to_csv(f"{ordering_type}.csv")
         print(f"Results for {ordering_type} based order")
         print(results)
         print("_____________________________________")
