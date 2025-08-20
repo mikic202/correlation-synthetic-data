@@ -36,7 +36,9 @@ def generate_graph_based_order_of_features(dataset: pd.DataFrame) -> list[str]:
     correlation_matrix = dataset.corr().to_numpy()
     np.fill_diagonal(correlation_matrix, 0.0)
     graph = generate_graph_form_adjecency_matrix(
-        correlation_matrix, mylabels=dataset.columns.tolist(), connection_cutoff=0.2
+        correlation_matrix,
+        mylabels=dataset.columns.tolist(),
+        connection_cutoff=0.2,
     )
     correlation_matrix_stats = list(
         reversed(
@@ -51,8 +53,11 @@ def generate_graph_based_order_of_features(dataset: pd.DataFrame) -> list[str]:
             continue
         visited_nodes.append(start_of_search)
         if len(graph[start_of_search]) == 0:
+            if not correlation_matrix_stats:
+                break
             start_of_search = correlation_matrix_stats.pop()
             continue
+
         not_visited = set(graph[start_of_search].keys()) - set(visited_nodes)
 
         sorted_importance = sorted(

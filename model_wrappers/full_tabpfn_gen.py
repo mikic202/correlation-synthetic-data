@@ -34,9 +34,9 @@ class FullTabpfnGen(unsupervised.TabPFNUnsupervisedModel):
         data = torch.tensor(train_data.to_numpy())
 
         if self._column_order_getter:
-            feature_order = self._column_order_getter(X_train)
+            feature_order = self._column_order_getter(train_data)
         else:
-            feature_order = X_train.columns.to_list()
+            feature_order = train_data.columns.to_list()
         if indices is None or attribute_names is None:
             categorical_features = feature_order
 
