@@ -22,6 +22,7 @@ def get_mfeat_zernike_dataset(
         dataset_format="dataframe"
     )
     dataset = dataset.rename(columns={"class": CLASYFICATION_TARGET}).astype("float32")
+    dataset[CLASYFICATION_TARGET] = dataset[CLASYFICATION_TARGET] - 1
     return train_test_split(dataset, test_size=test_size)
 
 
