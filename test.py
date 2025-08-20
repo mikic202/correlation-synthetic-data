@@ -5,7 +5,7 @@ from performance_metrics.measure_model_performance import (
 from time import time
 from model_wrappers.full_tabpfn_gen import FullTabpfnGen
 from feature_order.corelation_based_order import (
-    generate_correlation_based_order_of_features,
+    generate_correlation_based_order_of_features_in_dataset,
 )
 from feature_order.graph_based_order import generate_graph_based_order_of_features
 from feature_order.tree_based_order import (
@@ -14,7 +14,7 @@ from feature_order.tree_based_order import (
 )
 
 ordering_types = {
-    "corelation": generate_correlation_based_order_of_features,
+    "corelation": generate_correlation_based_order_of_features_in_dataset,
     "graph": generate_graph_based_order_of_features,
     "tree": generate_tree_based_order_of_features,
     "xgb": generate_xgboost_based_order_of_features,

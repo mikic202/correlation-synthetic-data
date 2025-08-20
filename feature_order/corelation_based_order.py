@@ -6,6 +6,14 @@ import polars as pl
 FEATURE_IMPORTANCE_ORDER = ["count", "max", "min", "sum"]
 
 
+def generate_correlation_based_order_of_features_in_dataset(
+    dataset: pd.DataFrame, correlation_treshold: int = 0.2
+) -> pd.DataFrame:
+    return generate_correlation_based_order_of_features(
+        dataset.corr(), correlation_treshold
+    )
+
+
 def generate_correlation_based_order_of_features(
     feature_correlation: pd.DataFrame, correlation_treshold: int = 0.2
 ) -> pd.DataFrame:
