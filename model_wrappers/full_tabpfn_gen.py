@@ -55,11 +55,12 @@ class FullTabpfnGen(unsupervised.TabPFNUnsupervisedModel):
             t=temp,
         )
         synthetic_data = pd.DataFrame(synthetic_data, columns=train_data.columns)
+        synthetic_data.to_csv("synthetic_data_321.csv", index=False)
         return (
             synthetic_data.drop("target", axis=1),
             (
                 (synthetic_data["target"].round() - 1).to_list()
                 if min(synthetic_data["target"].round()) > 0
-                else synthetic_data["target"].to_list()
+                else synthetic_data["target"].round().to_list()
             ),
         )
