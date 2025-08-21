@@ -1,6 +1,5 @@
 from tabpfn_extensions import unsupervised
 from tabpfn import TabPFNClassifier, TabPFNRegressor
-import numpy as np
 import pandas as pd
 import torch
 from typing import Callable
