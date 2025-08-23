@@ -2,6 +2,7 @@ from external.tab_pfn_gen.src.tabpfgen.tabpfgen import TabPFGen
 from performance_metrics.measure_synthetic_data_generation_time import (
     measure_synthetic_data_generation_time,
 )
+from test_datasets.dataset_getters import get_pc4_dataset
 import torch
 
 
@@ -12,7 +13,7 @@ if __name__ == "__main__":
 
     generator = TabPFGen(n_sgld_steps=100, device=device)
     time_taken = measure_synthetic_data_generation_time(
-        generator.generate_classification
+        generator.generate_classification, get_pc4_dataset
     )
 
     print("Synthetic data generation took: ", time_taken)

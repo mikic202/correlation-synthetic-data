@@ -1,6 +1,7 @@
 from typing import Callable
 import pandas as pd
 from time import time
+from test_datasets.dataset_getters import CLASYFICATION_TARGET
 
 
 def measure_synthetic_data_generation_time(
@@ -10,13 +11,17 @@ def measure_synthetic_data_generation_time(
     maximum_samples: int = 10000,
     measurement_resolution: int = 1000,
 ) -> pd.DataFrame:
-    X_train, y_train = dataset_getter()
+    train, _ = dataset_getter()
+    x_train, y_train = (
+        train.drop(CLASYFICATION_TARGET, axis=1),
+        train[CLASYFICATION_TARGET].to_list(),
+    )
     generation_time = []
     for n_samples in range(
         minimum_samples, maximum_samples + 1, measurement_resolution
     ):
         start = time()
-        model(X_train, y_train, n_samples)
+        model(x_train, y_train, n_samples)
         end = time()
         generation_time.append(end - start)
 
