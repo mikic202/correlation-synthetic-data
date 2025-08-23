@@ -1,5 +1,6 @@
 import numpy as np
 from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
+from sklearn.preprocessing import LabelEncoder
 from xgboost import XGBClassifier, XGBRegressor
 import pandas as pd
 
@@ -38,6 +39,8 @@ def generate_xgboost_based_order_of_features(
 
     for i, feature in enumerate(dataset.columns):
         if dataset[feature].nunique() <= MAX_UNIQUE_FEATURES_AS_CATHEGORICAL:
+            if dataset[feature].nunique() <= max(dataset[feature].unique()):
+                dataset[feature] = LabelEncoder().fit_transform(dataset[feature])
             rf = XGBClassifier(
                 n_estimators=n_estimators,
                 max_depth=max_depth,
