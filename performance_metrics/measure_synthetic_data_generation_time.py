@@ -17,19 +17,23 @@ def measure_synthetic_data_generation_time(
         train[CLASYFICATION_TARGET].to_list(),
     )
     generation_time = []
-    for n_samples in range(
-        minimum_samples, maximum_samples + 1, measurement_resolution
-    ):
-        start = time()
-        model(x_train, y_train, n_samples)
-        end = time()
-        generation_time.append(end - start)
-
+    try:
+        for n_samples in range(
+            minimum_samples, maximum_samples + 1, measurement_resolution
+        ):
+            start = time()
+            model(x_train, y_train, n_samples)
+            end = time()
+            generation_time.append(end - start)
+    except KeyboardInterrupt as e:
+        print(
+            f"Error during genersation of {minimum_samples + len(generation_time) * measurement_resolution} samples: {e}"
+        )
     return pd.DataFrame(
         {
             "n_samples": range(
                 minimum_samples, maximum_samples + 1, measurement_resolution
-            ),
+            )[: len(generation_time)],
             "generation_time": generation_time,
         }
     )
