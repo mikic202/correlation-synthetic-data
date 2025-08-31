@@ -4,6 +4,7 @@ from sklearn.neighbors import NearestNeighbors
 from sklearn.metrics import silhouette_score
 import numpy as np
 from heapq import nsmallest
+from test_datasets.dataset_getters import CLASYFICATION_TARGET
 
 
 MAX_NUMBER_OF_CLUSTERS = 20
@@ -45,3 +46,21 @@ def calculate_distance_to_nearest_neighbour(
         "std": np.std(distances[:, 1]),
         "median": np.median(distances[:, 1]),
     }
+
+
+def measure_privacy(model, dataset_getter, n_samples: int | None = None):
+    train, _ = dataset_getter()
+    x_train, y_train = (
+        train.drop(CLASYFICATION_TARGET, axis=1),
+        train[CLASYFICATION_TARGET].to_list(),
+    )
+    synth_x, synth_y = model(
+        x_train,
+        y_train,
+        n_samples=n_samples if n_samples else x_train.shape[0],
+        balance_classes=True,
+    )
+    synth_data = pd.DataFrame(synth_x, columns=x_train.columns)
+    synth_data[CLASYFICATION_TARGET] = pd.Series(synth_y)
+    print(calculate_distance_to_nearest_neighbour(synth_data))
+    print(calculate_k_anonimity_for_datset(synth_data))
