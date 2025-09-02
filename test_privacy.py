@@ -11,7 +11,12 @@ if __name__ == "__main__":
     print("Using device:", device)
 
     generator = TabPFGen(device=str(device))
+    full_generator = FullTabpfnGen(device=str(device))
 
-    measure_privacy(
-        generator.generate_classification, get_climate_model_simulation_dataset
+    print(
+        measure_privacy(
+            [generator.generate_classification, full_generator],
+            get_climate_model_simulation_dataset,
+            1000,
+        )
     )

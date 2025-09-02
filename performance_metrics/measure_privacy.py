@@ -48,19 +48,33 @@ def calculate_distance_to_nearest_neighbour(
     }
 
 
-def measure_privacy(model, dataset_getter, n_samples: int | None = None):
+def measure_privacy(models, dataset_getter, n_samples: int | None = None):
     train, _ = dataset_getter()
-    x_train, y_train = (
-        train.drop(CLASYFICATION_TARGET, axis=1),
-        train[CLASYFICATION_TARGET].to_list(),
-    )
-    synth_x, synth_y = model(
-        x_train,
-        y_train,
-        n_samples=n_samples if n_samples else x_train.shape[0],
-        balance_classes=True,
-    )
-    synth_data = pd.DataFrame(synth_x, columns=x_train.columns)
-    synth_data[CLASYFICATION_TARGET] = pd.Series(synth_y)
-    print(calculate_distance_to_nearest_neighbour(synth_data))
-    print(calculate_k_anonimity_for_datset(synth_data))
+    privacy_results = pd.DataFrame()
+    for model in models:
+        x_train, y_train = (
+            train.drop(CLASYFICATION_TARGET, axis=1),
+            train[CLASYFICATION_TARGET].to_list(),
+        )
+        synth_x, synth_y = model(
+            x_train,
+            y_train,
+            n_samples=n_samples if n_samples else x_train.shape[0],
+            balance_classes=True,
+        )
+        synth_data = pd.DataFrame(synth_x, columns=x_train.columns)
+        synth_data[CLASYFICATION_TARGET] = pd.Series(synth_y)
+        model_privacy_results = {
+            "nn_distance_" + distance_metric: metric_value
+            for distance_metric, metric_value in calculate_distance_to_nearest_neighbour(
+                synth_data
+            ).items()
+        }
+        model_privacy_results["k_anonimity"] = calculate_k_anonimity_for_datset(
+            synth_data
+        )
+        model_privacy_results["model"] = model.__class__.__name__
+        privacy_results = pd.concat(
+            [privacy_results, pd.DataFrame([model_privacy_results])], ignore_index=True
+        )
+    return privacy_results
