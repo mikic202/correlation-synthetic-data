@@ -4,6 +4,7 @@ import numpy as np
 from sklearn.ensemble import RandomForestClassifier
 from xgboost import XGBClassifier
 from tabpfn import TabPFNClassifier
+from tabicl import TabICLClassifier
 from sklearn.linear_model import LogisticRegression
 import torch
 from sklearn.preprocessing import StandardScaler
@@ -91,6 +92,23 @@ def measure_tabpfn_auc(
         reral_x,
         real_y,
         TabPFNClassifier,
+        n_estimators=len(reral_x.columns) * 2,
+        device=("cuda" if torch.cuda.is_available() else "cpu"),
+    )
+
+
+def measure_tabicl_auc(
+    synthetic_x: list[pd.DataFrame],
+    synthetic_y: list[list[int]],
+    reral_x: pd.DataFrame,
+    real_y: list[int],
+):
+    return measuer_roc(
+        synthetic_x,
+        synthetic_y,
+        reral_x,
+        real_y,
+        TabICLClassifier,
         n_estimators=len(reral_x.columns) * 2,
         device=("cuda" if torch.cuda.is_available() else "cpu"),
     )

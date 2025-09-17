@@ -56,6 +56,7 @@ DATASET_COLUMN = "dataset"
 XGBOOST_COLUMN = "xgboost"
 TABPFN_COLUMN = "TabPFN"
 LOGISTIC_REGRESION_COLUMN = "LR"
+TABICL_COLUMN = "TabICL"
 LINEAR_REGRESION_COLUMN = "linear_regression"
 
 
@@ -91,7 +92,7 @@ def tabpfn_process(
     test_y: pd.DataFrame,
 ):
     downstream_results_queue.put(
-        (2, measure_tabpfn_auc([synth_x], [synth_y], test_x, test_y)[0])
+        (3, measure_tabpfn_auc([synth_x], [synth_y], test_x, test_y)[0])
     )
 
 
@@ -103,7 +104,19 @@ def logistic_regression_process(
     test_y: pd.DataFrame,
 ):
     downstream_results_queue.put(
-        (3, measure_logistic_regresion_auc([synth_x], [synth_y], test_x, test_y)[0])
+        (2, measure_logistic_regresion_auc([synth_x], [synth_y], test_x, test_y)[0])
+    )
+
+
+def tabicl_process(
+    downstream_results_queue: Queue,
+    synth_x: pd.DataFrame,
+    synth_y: pd.DataFrame,
+    test_x: pd.DataFrame,
+    test_y: pd.DataFrame,
+):
+    downstream_results_queue.put(
+        (4, measure_tabpfn_auc([synth_x], [synth_y], test_x, test_y)[0])
     )
 
 
@@ -153,19 +166,24 @@ def measure_model_clasification_performance_once(
             args=(downstream_results_queue, synth_x, synth_y, test_x, test_y),
         )
     )
+    downstream_jobs.append(
+        Process(
+            target=tabicl_process,
+            args=(downstream_results_queue, synth_x, synth_y, test_x, test_y),
+        )
+    )
 
     for job in downstream_jobs:
         job.start()
     for job in downstream_jobs:
         print(f"Waiting for {job.name} to finish...")
         job.join()
-    a = [
+    return [
         accuracy
         for _, accuracy in sorted(
             downstream_results_queue.get() for _ in range(len(downstream_jobs))
         )
     ]
-    return a
 
 
 def measure_model_clasification_performance(
@@ -178,11 +196,12 @@ def measure_model_clasification_performance(
             XGBOOST_COLUMN,
             LOGISTIC_REGRESION_COLUMN,
             TABPFN_COLUMN,
+            TABICL_COLUMN,
         ]
     )
     for dataset_name, dataset_getter in AVAILABLE_DATASETS.items():
         train, test = dataset_getter()
-        downstream_accuracies = np.array([0.0, 0.0, 0.0, 0.0])
+        downstream_accuracies = np.array([0.0, 0.0, 0.0, 0.0, 0.0])
         real_x, real_y = (
             train.drop(CLASYFICATION_TARGET, axis=1),
             train[CLASYFICATION_TARGET].to_list(),
