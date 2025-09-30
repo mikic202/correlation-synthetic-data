@@ -16,6 +16,7 @@ from performance_metrics.measure_area_under_curve import (
     measure_random_forest_auc,
     measure_xgb_auc,
     measure_tabpfn_auc,
+    measure_tabicl_auc,
 )
 from performance_metrics.measure_mean_absolute_error import (
     measure_linear_regresion_mean_absolute_error,
@@ -116,7 +117,7 @@ def tabicl_process(
     test_y: pd.DataFrame,
 ):
     downstream_results_queue.put(
-        (4, measure_tabpfn_auc([synth_x], [synth_y], test_x, test_y)[0])
+        (4, measure_tabicl_auc([synth_x], [synth_y], test_x, test_y)[0])
     )
 
 
