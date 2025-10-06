@@ -12,7 +12,7 @@ class CTGANGenerator:
     def fit(self, X: pd.DataFrame, y: pd.Series):
         data = X.copy()
         data[CTGANGenerator.TARGET] = y
-        self.model.fit(data.astype(float))
+        self.model.fit(data.astype(float), discrete_columns=[CTGANGenerator.TARGET])
 
     def generate(self, n_samples: int) -> tuple[pd.DataFrame, pd.Series]:
         samples = self.model.sample(n_samples)

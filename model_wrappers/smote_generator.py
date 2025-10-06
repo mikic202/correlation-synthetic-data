@@ -8,7 +8,12 @@ class SmoteGenerator:
         pass
 
     def __call__(
-        self, X_train: pd.DataFrame, y_train: pd.Series, n_samples: int, **kwargs
+        self,
+        X_train: pd.DataFrame,
+        y_train: pd.Series,
+        n_samples: int,
+        balance_classes: bool,
+        **kwargs
     ):
         classes, counts = np.unique(y_train, return_counts=True)
         n_classes = len(classes)
