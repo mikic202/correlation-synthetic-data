@@ -8,6 +8,7 @@ from test_datasets.dataset_getters import (
     get_sleep_deprivation_and_cognitive_performance_regression_dataset,
     get_superconduct_regression_dataset,
     get_house_prices_regression_dataset,
+    get_cardiovascular_dataset,
     REGRESION_TARGET,
     CLASYFICATION_TARGET,
 )
@@ -41,6 +42,7 @@ AVAILABLE_DATASETS = {
     "climate_model_simulation": get_climate_model_simulation_dataset,
     "wdbc": get_wdbc_dataset,
     "analcatdata_authorship": get_analcatdata_authorship_dataset,
+    "cardiovascular": get_cardiovascular_dataset,
 }
 
 

@@ -1,6 +1,7 @@
 import pandas as pd
 import openml
 from sklearn.model_selection import train_test_split
+import kagglehub
 
 
 CLASYFICATION_TARGET = "c"
@@ -147,4 +148,11 @@ def get_house_prices_regression_dataset(
         dataset[feature_to_factorize] = dataset[feature_to_factorize].factorize()[0]
     dataset = dataset.rename(columns={"SalePrice": REGRESION_TARGET})
     dataset = dataset.dropna()
+    return train_test_split(dataset, test_size=test_size)
+
+
+def get_cardiovascular_dataset(test_size: float = 0.1):
+    path = kagglehub.dataset_download("sulianova/cardiovascular-disease-dataset")
+    dataset = pd.read_csv(path + "/cardio_train.csv", sep=";")
+    dataset = dataset.rename(columns={"Author": CLASYFICATION_TARGET}).astype("float32")
     return train_test_split(dataset, test_size=test_size)
