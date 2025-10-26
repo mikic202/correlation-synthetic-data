@@ -13,7 +13,7 @@ def get_pc4_dataset(test_size: float = 0.1) -> tuple[pd.DataFrame, pd.DataFrame]
         dataset_format="dataframe"
     )
     dataset[CLASYFICATION_TARGET] = dataset[CLASYFICATION_TARGET].astype(int)
-    return train_test_split(dataset, test_size=test_size)
+    return train_test_split(dataset, test_size=test_size, random_state=42)
 
 
 def get_mfeat_zernike_dataset(
@@ -24,7 +24,7 @@ def get_mfeat_zernike_dataset(
     )
     dataset = dataset.rename(columns={"class": CLASYFICATION_TARGET}).astype("float32")
     dataset[CLASYFICATION_TARGET] = dataset[CLASYFICATION_TARGET] - 1
-    return train_test_split(dataset, test_size=test_size)
+    return train_test_split(dataset, test_size=test_size, random_state=42)
 
 
 def get_climate_model_simulation_dataset(
@@ -36,7 +36,7 @@ def get_climate_model_simulation_dataset(
     dataset = dataset.rename(columns={"outcome": CLASYFICATION_TARGET}).astype(
         "float32"
     )
-    return train_test_split(dataset, test_size=test_size)
+    return train_test_split(dataset, test_size=test_size, random_state=42)
 
 
 def get_wdbc_dataset(test_size: float = 0.1) -> tuple[pd.DataFrame, pd.DataFrame]:
@@ -45,7 +45,7 @@ def get_wdbc_dataset(test_size: float = 0.1) -> tuple[pd.DataFrame, pd.DataFrame
     )
     dataset = dataset.rename(columns={"Class": CLASYFICATION_TARGET}).astype("float32")
     dataset[CLASYFICATION_TARGET] = dataset[CLASYFICATION_TARGET] - 1
-    return train_test_split(dataset, test_size=test_size)
+    return train_test_split(dataset, test_size=test_size, random_state=42)
 
 
 def get_analcatdata_authorship_dataset(
@@ -56,7 +56,7 @@ def get_analcatdata_authorship_dataset(
     )
     dataset["Author"] = dataset["Author"].factorize()[0]
     dataset = dataset.rename(columns={"Author": CLASYFICATION_TARGET}).astype("float32")
-    return train_test_split(dataset, test_size=test_size)
+    return train_test_split(dataset, test_size=test_size, random_state=42)
 
 
 def get_heart_failure_clinical_regresion_dataset(
@@ -66,7 +66,7 @@ def get_heart_failure_clinical_regresion_dataset(
         dataset_format="dataframe"
     )
     dataset = dataset.rename(columns={"platelets": REGRESION_TARGET}).astype("float32")
-    return train_test_split(dataset, test_size=test_size)
+    return train_test_split(dataset, test_size=test_size, random_state=42)
 
 
 def get_superconduct_regression_dataset(
@@ -78,7 +78,7 @@ def get_superconduct_regression_dataset(
     dataset = dataset.rename(columns={"criticaltemp": REGRESION_TARGET}).astype(
         "float32"
     )
-    return train_test_split(dataset, test_size=test_size)
+    return train_test_split(dataset, test_size=test_size, random_state=42)
 
 
 def get_sleep_deprivation_and_cognitive_performance_regression_dataset(
@@ -90,7 +90,7 @@ def get_sleep_deprivation_and_cognitive_performance_regression_dataset(
     dataset = dataset.drop(columns=["Participant_ID"], axis=1)
     dataset["Gender"] = dataset["Gender"].factorize()[0]
     dataset = dataset.rename(columns={"Stress_Level": REGRESION_TARGET})
-    return train_test_split(dataset, test_size=test_size)
+    return train_test_split(dataset, test_size=test_size, random_state=42)
 
 
 def get_house_prices_regression_dataset(
@@ -148,14 +148,14 @@ def get_house_prices_regression_dataset(
         dataset[feature_to_factorize] = dataset[feature_to_factorize].factorize()[0]
     dataset = dataset.rename(columns={"SalePrice": REGRESION_TARGET})
     dataset = dataset.dropna()
-    return train_test_split(dataset, test_size=test_size)
+    return train_test_split(dataset, test_size=test_size, random_state=42)
 
 
 def get_cardiovascular_dataset(test_size: float = 0.1):
     path = kagglehub.dataset_download("sulianova/cardiovascular-disease-dataset")
     dataset = pd.read_csv(path + "/cardio_train.csv", sep=";")
     dataset = dataset.rename(columns={"Author": CLASYFICATION_TARGET}).astype("float32")
-    return train_test_split(dataset, test_size=test_size)
+    return train_test_split(dataset, test_size=test_size, random_state=42)
 
 
 def get_abalone_dataset(test_size: float = 0.1):
@@ -163,4 +163,4 @@ def get_abalone_dataset(test_size: float = 0.1):
     print(path)
     dataset = pd.read_csv(path + "/abalone.csv", sep=";")
     dataset = dataset.rename(columns={"Author": CLASYFICATION_TARGET}).astype("float32")
-    return train_test_split(dataset, test_size=test_size)
+    return train_test_split(dataset, test_size=test_size, random_state=42)
