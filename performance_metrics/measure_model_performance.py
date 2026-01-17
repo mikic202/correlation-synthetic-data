@@ -30,6 +30,9 @@ from performance_metrics.measure_privacy import (
     calculate_k_anonimity_for_datset,
     calculate_distance_to_nearest_neighbour,
 )
+from performance_metrics.measure_synthetic_data_coverage import (
+    calculate_synthetic_data_coverage,
+)
 import pandas as pd
 import numpy as np
 import multiprocessing as mp
@@ -365,5 +368,52 @@ def measure_distance_to_nearest_neighbour(
             )
             single_dataset_distances.index = single_dataset_distances.index + 1
         results.loc[-1] = [dataset_name, *(single_dataset_distances.mean().to_list())]
+        results.index = results.index + 1
+    return results
+
+
+def measure_model_synthetic_data_coverage(
+    model, number_of_repetitions: int = 5, n_samples: int | None = None, **kwargs
+):
+    results = pd.DataFrame(
+        columns=[DATASET_COLUMN, "class_coverage_mean", "class_coverage_std"]
+    )
+
+    for dataset_name, dataset_getter in AVAILABLE_DATASETS.items():
+        train, _ = dataset_getter()
+        print(f"Measuring synthetic data coverage for {dataset_name}...")
+        print(train.columns)
+        real_x, real_y = (
+            train.drop(CLASYFICATION_TARGET, axis=1),
+            train[CLASYFICATION_TARGET].to_numpy(),
+        )
+        single_dataset_coverages = []
+        for _ in range(number_of_repetitions):
+            synth_x, synth_y = model(
+                real_x,
+                real_y,
+                n_samples=n_samples if n_samples else real_x.shape[0],
+                **kwargs,
+            )
+            synth_x_df = pd.DataFrame(synth_x, columns=real_x.columns)
+            synth_y_series = pd.Series(synth_y, name=CLASYFICATION_TARGET)
+            synth_data = pd.concat([synth_x_df, synth_y_series], axis=1)
+            real_data = pd.concat(
+                [real_x, pd.Series(real_y, name=CLASYFICATION_TARGET)], axis=1
+            )
+            coverage_per_class = calculate_synthetic_data_coverage(
+                real_data,
+                synth_data,
+                classification_target=CLASYFICATION_TARGET,
+            )
+            mean_coverage = np.mean(list(coverage_per_class.values()))
+            single_dataset_coverages.append(mean_coverage)
+
+        results.loc[-1] = [
+            dataset_name,
+            np.mean(single_dataset_coverages),
+            np.std(single_dataset_coverages),
+        ]
+        print(results)
         results.index = results.index + 1
     return results
