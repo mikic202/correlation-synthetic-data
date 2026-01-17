@@ -154,7 +154,7 @@ def get_house_prices_regression_dataset(
 def get_cardiovascular_dataset(test_size: float = 0.1):
     path = kagglehub.dataset_download("sulianova/cardiovascular-disease-dataset")
     dataset = pd.read_csv(path + "/cardio_train.csv", sep=";")
-    dataset = dataset.rename(columns={"Author": CLASYFICATION_TARGET}).astype("float32")
+    dataset = dataset.rename(columns={"cardio": CLASYFICATION_TARGET}).astype("float32")
     return train_test_split(dataset, test_size=test_size, random_state=42)
 
 
@@ -162,5 +162,5 @@ def get_abalone_dataset(test_size: float = 0.1):
     path = kagglehub.dataset_download("rodolfomendes/abalone-dataset")
     print(path)
     dataset = pd.read_csv(path + "/abalone.csv", sep=";")
-    dataset = dataset.rename(columns={"Author": CLASYFICATION_TARGET}).astype("float32")
+    dataset = dataset.rename(columns={"Rings": CLASYFICATION_TARGET}).astype("float32")
     return train_test_split(dataset, test_size=test_size, random_state=42)
