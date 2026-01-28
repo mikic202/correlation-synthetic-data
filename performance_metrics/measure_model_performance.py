@@ -35,6 +35,7 @@ from performance_metrics.measure_synthetic_data_coverage import (
 )
 from performance_metrics.measure_dataset_statistics import (
     measure_dataset_statistics,
+    measure_matrix_statistics,
 )
 import pandas as pd
 import numpy as np
@@ -430,6 +431,8 @@ def calculate_synthetic_data_statistics(
             train[CLASYFICATION_TARGET].to_numpy(),
         )
         single_dataset_statistics = []
+        single_dataset_covariance = []
+        single_dataset_ranks = []
         for _ in range(number_of_repetitions):
             synth_x, synth_y = model(
                 real_x,
@@ -446,8 +449,18 @@ def calculate_synthetic_data_statistics(
 
             comparison_dsc = measure_dataset_statistics(real_data, synth_data)
             single_dataset_statistics.append(comparison_dsc)
+
+            cov, rank = measure_matrix_statistics(real_x, synth_x_df)
+            single_dataset_covariance.append(cov)
+            single_dataset_ranks.append(rank)
         avg_comparison_dsc = (
             pd.concat(single_dataset_statistics).groupby(level=0).mean()
         )
-        results[dataset_name] = avg_comparison_dsc
+        avg_covariance = pd.concat(single_dataset_covariance).groupby(level=0).mean()
+        avg_rank = np.mean(single_dataset_ranks)
+        results[dataset_name] = {
+            "stats": avg_comparison_dsc,
+            "cov": avg_covariance,
+            "rank": avg_rank,
+        }
     return results

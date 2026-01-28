@@ -1,5 +1,6 @@
 import pandas as pd
 from scipy.stats import kstest
+import numpy as np
 
 
 def calculate_dataset_statistics(dataset: pd.DataFrame) -> pd.DataFrame:
@@ -30,3 +31,16 @@ def measure_dataset_statistics(
     comparison_dsc = (synthetic_data_dsc - real_data_dsc).abs()
 
     return comparison_dsc
+
+
+def measure_matrix_statistics(
+    real_matrix: pd.DataFrame,
+    synthetic_matrix: pd.DataFrame,
+) -> pd.DataFrame:
+    cov_matrix_diff = real_matrix.cov() - synthetic_matrix.cov()
+
+    matrix_rank_diff = np.linalg.matrix_rank(real_matrix) - np.linalg.matrix_rank(
+        synthetic_matrix
+    )
+
+    return matrix_rank_diff, cov_matrix_diff
